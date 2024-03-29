@@ -2,12 +2,15 @@ package study.querydsl;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static study.querydsl.entity.QMember.*;
+import static study.querydsl.entity.QTeam.*;
 
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.JPQLQueryFactory;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import java.util.List;
+import org.hibernate.annotations.processing.SQL;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.entity.Member;
 import study.querydsl.entity.QMember;
+import study.querydsl.entity.QTeam;
 import study.querydsl.entity.Team;
 
 @SpringBootTest
@@ -165,7 +169,127 @@ public class QuerydslBasicTest {
     assertEquals(member6.getUsername(),"member6");
     assertNull(memberNull.getUsername());
   }
+
+  @Test
+  public void paging1() throws Exception {
+    //given
+    QueryResults<Member> queryResults = queryFactory
+        .selectFrom(member)
+        .orderBy(member.age.desc())
+        .offset(1)
+        .limit(2)
+        .fetchResults();
+
+    assertEquals(queryResults.getTotal(),4);
+    assertEquals(queryResults.getLimit(),2);
+    assertEquals(queryResults.getOffset(),1);
+    assertEquals(queryResults.getResults().size(),2);
+    //when
+
+    //then
+  }
+
+  @Test
+  public void aggregation() throws Exception {
+    //given
+    List<Tuple> result = queryFactory
+        .select(
+            member.count(),
+            member.age.sum(),
+            member.age.avg(),
+            member.age.max(),
+            member.age.min()
+        )
+        .from(member)
+        .fetch();
+
+    Tuple tuple = result.get(0);
+    assertEquals(tuple.get(member.count()),4);
+    assertEquals(tuple.get(member.age.sum()),100);
+    assertEquals(tuple.get(member.age.avg()),25);
+    assertEquals(tuple.get(member.age.max()),40);
+    assertEquals(tuple.get(member.age.min()),10);
+    //when
+
+    //then
+  }
+
+  @Test
+  public void group() throws Exception {
+    //given
+    List<Tuple> result = queryFactory
+        .select(team.name, member.age.avg())
+        .from(member)
+        .join(member.team, team)
+        .groupBy(team.name)
+        .fetch();
+
+    Tuple teamA = result.get(0);
+    Tuple teamB = result.get(1);
+    assertEquals(teamA.get(team.name),"teamA");
+    assertEquals(teamA.get(member.age.avg()),15);
+    assertEquals(teamB.get(team.name),"teamB");
+    assertEquals(teamB.get(member.age.avg()),35);
+  }
+
+  @Test
+  public void join() throws Exception {
+    //given
+    List<Member> result = queryFactory
+        .selectFrom(member)
+        .join(member.team, team)
+        .where(team.name.eq("teamA"))
+        .fetch();
+
+    //when
+    
+    //then
+  }
+
+  //예) 회원과 팀을 조인하면서,팀 이름이 teamA인 팀만 조인,회원은 모두 조회
+  // JPQL의 경우: select m, t from Member m left join m.team t on t.name = 'teamA'
+  @Test
+  public void join_on_filtering() throws Exception {
+    //given
+    List<Tuple> result = queryFactory
+        .select(member, team)
+        .from(member)
+        .leftJoin(member.team, team).on(team.name.eq("teamA"))
+        .fetch();
+    for (Tuple tuple : result) {
+      System.out.println("tuple = " + tuple);
+    }
+    //when
+
+    //then
+  }
+
+
+
+   // 2. 연관관계 없는 엔티티 외부 조인
+   // 예) 회원의 이름과 팀의 이름이 같은 대상 외부 조인
+   // JPQL: SELECT m, t FROM Member m LEFT JOIN Team t on m.username = t.name
+   // SQL: SELECT m.*, t.* FROM Member m LEFT JOIN Team t ON m.username = t.name
+  @Test
+  public void join_on_no_relation() throws Exception {
+    em.persist(new Member("teamA"));
+    em.persist(new Member("teamB"));
+    em.persist(new Member("teamC"));
+
+    List<Tuple> result = queryFactory
+        .select(member, team)
+        .from(member)
+        .leftJoin(team).on(member.username.eq(team.name))
+        .fetch();
+    for (Tuple tuple : result) {
+      System.out.println("t=" + tuple);
+    }
+  }
+
+
   
+
+
   
 
 
