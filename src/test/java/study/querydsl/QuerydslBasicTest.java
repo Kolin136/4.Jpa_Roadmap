@@ -448,7 +448,7 @@ public class QuerydslBasicTest {
 
     for (MemberDto memberDto : result) {
       System.out.println("memberDto = " + memberDto);
-<<<<<<< HEAD
+
     }
   }
   
@@ -591,92 +591,7 @@ public class QuerydslBasicTest {
 
     //then
   }
-=======
-    }
-  }
-  
-  @Test
-  @DisplayName("")
-  public void findDtoBySetter() throws Exception {
-    List<MemberDto> result = queryFactory
-        .select(Projections.bean(MemberDto.class,
-            member.username,
-            member.age))
-        .from(member)
-        .fetch();
-    for (MemberDto memberDto : result) {
-      System.out.println("memberDto = " + memberDto);
-    }
-  }
-  @Test
-  @DisplayName("")
-  public void findDtoByField() throws Exception {
-    List<MemberDto> result = queryFactory
-        .select(Projections.fields(MemberDto.class,
-            member.username,
-            member.age))
-        .from(member)
-        .fetch();
-    for (MemberDto memberDto : result) {
-      System.out.println("memberDto = " + memberDto);
-    }
-  }
 
-  @Test
-  @DisplayName("")
-  public void findDtoByConstructor() throws Exception {
-    List<MemberDto> result = queryFactory
-        .select(Projections.constructor(MemberDto.class,
-            member.username,
-            member.age))
-        .from(member)
-        .fetch();
-    for (MemberDto memberDto : result) {
-      System.out.println("memberDto = " + memberDto);
-    }
-  }
-  
-  @Test
-  public void findDtoByQueryProjection() throws Exception {
-    List<MemberDto> result = queryFactory
-        .select(new QMemberDto(member.username, member.age))
-        .from(member)
-        .fetch();
-    for (MemberDto memberDto : result) {
-      System.out.println("memberDto = " + memberDto);
-    }
-  }
-
-  @Test
-  public void dynamicQuery_BooleanBuilder() throws Exception {
-    String usernameParam = null;
-    Integer ageParam = null;
-    List<Member> result = searchMember1(usernameParam,ageParam);
-    for (Member member1 : result) {
-      System.out.println("member1 = " + member1);
-    }
-
-  }
-
-  private List<Member> searchMember1(String usernameCond, Integer ageCond) {
-    BooleanBuilder builder = new BooleanBuilder();
-    if(usernameCond != null){
-      builder.and(member.username.eq(usernameCond));
-    }
-
-    if(ageCond != null){
-      builder.and(member.age.eq(ageCond));
-    }
-    return queryFactory
-        .selectFrom(member)
-        .where(builder)
-        .fetch();
-
-  }
-
-  
-  
->>>>>>> e68e594c56c5251959f3e027f4ae02335a51ae1b
 
 
 
