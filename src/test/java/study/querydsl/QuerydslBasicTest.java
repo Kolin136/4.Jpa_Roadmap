@@ -8,7 +8,9 @@ import static study.querydsl.entity.QTeam.*;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.QueryResults;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
@@ -489,7 +491,7 @@ public class QuerydslBasicTest {
       System.out.println("memberDto = " + memberDto);
     }
   }
-  
+
   @Test
   public void findDtoByQueryProjection() throws Exception {
     List<MemberDto> result = queryFactory
@@ -528,9 +530,66 @@ public class QuerydslBasicTest {
 
   }
 
-  
-  
+  // 동적 쿼리문 where 다중 파라미터
+  @Test
+  public void dynamicQuery_WhereParam() throws Exception {
+    String usernameParam = "member1";
+    Integer ageParam = 10;
+    List<Member> result = searchMember2(usernameParam,ageParam);
 
+  }
+
+  private List<Member> searchMember2(String usernameCond, Integer ageCond) {
+    return queryFactory
+        .selectFrom(member)
+//        .where(usernameEq(usernameCond),ageEq(ageCond))
+        .where(allEq(usernameCond,ageCond))
+        .fetch();
+  }
+
+  private BooleanExpression usernameEq(String usernameCond) {
+    return usernameCond != null ? member.username.eq(usernameCond) : null;
+  }
+
+  private BooleanExpression ageEq(Integer ageCond) {
+    return ageCond != null ? member.age.eq(ageCond) : null;
+  }
+
+  private BooleanExpression allEq(String usernameCond , Integer ageCond) {
+    return usernameEq(usernameCond).and(ageEq(ageCond));
+  }
+
+  @Test
+  public void bulkUpdate() throws Exception {
+    //given
+    long count = queryFactory
+        .update(member)
+        .set(member.username, "비회원")
+        .where(member.age.lt(28))
+        .execute();
+    //when
+    List<Member> result = queryFactory
+        .selectFrom(member)
+        .fetch();
+    for (Member member1 : result) {
+      System.out.println("member1 = " + member1);
+    }
+    //then
+  }
+
+  @Test
+  public void bulkDelete() throws Exception {
+    //given
+    long result = queryFactory
+        .delete(member)
+        .where(member.age.gt(23))
+        .execute();
+
+    System.out.println("체크"+result);
+    //when
+
+    //then
+  }
 
 
 
