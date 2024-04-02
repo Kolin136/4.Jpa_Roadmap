@@ -1,5 +1,6 @@
 package study.querydsl.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import jakarta.persistence.EntityManager;
@@ -21,25 +22,22 @@ class MemberRepositoryTest {
     
     @Autowired
     EntityManager em;
-    
-    @Test
-    public void check() throws Exception {
-      //given
-      Team teamA = new Team("teamA");
-      Member seok = new Member("seok", 30, teamA);
-      em.persist(teamA);
-      em.persist(seok);
-      
-      em.flush();
-      em.clear();
-      //when
-      List<Member> memberJoinTeam = memberRepository.findMemberJoinTeam("teamA");
-      for (Member member : memberJoinTeam) {
-        System.out.println("member. = " + member.getTeam().getClass());
-        System.out.println("체크"+member.getTeam().getName());
-      }
-      //then
-    }
-    
+
+  @Test
+  public void basicTest() {
+    Member member = new Member("member1", 10);
+    memberRepository.save(member);
+
+    Member findMember = memberRepository.findById(member.getId()).get();
+    assertThat(findMember).isEqualTo(member);
+
+    List<Member> result1 = memberRepository.findAll();
+    assertThat(result1).containsExactly(member);
+
+    List<Member> result2 = memberRepository.findByUsername("member1");
+    assertThat(result2).containsExactly(member);
+  }
+
+
     
 }
